@@ -6,10 +6,10 @@ import re
 import traceback
 import urllib.request
 import urllib.error
+from libs.extraction_model import ExtractionModel
 
 app = Flask(__name__)
-
-# url_for('static', filename='style.css')
+extractionModel = ExtractionModel()
 
 
 @app.route('/')
@@ -21,10 +21,15 @@ def hello_world():
 def extract():
     app.logger.info('extraction request received')
     page = request.get_json()
-    import time
-    time.sleep(5)
 
-    return jsonify(**page)
+    predictframe = extractionModel.get_predictframe(page)
+
+    result = {
+        "title": extractionModel.get_title(predictframe),
+        "authors": extractionModel.get_authors(predictframe),
+        "date": extractionModel.get_date(predictframe)
+    }
+    return jsonify(**result)
 
 
 @app.route('/mirror/', methods=['GET', 'POST'])

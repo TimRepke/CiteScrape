@@ -69,10 +69,10 @@ function fetch_elements(url, iFrameWindow, iFrameDoc){
             text: innerText,
             html: el.innerHTML,
             bounds: {
-                height: el.offsetHeight,
-                width: el.offsetWidth,
-                top: bounds.top,
-                left: bounds.left
+                height: el.offsetHeight || 0,
+                width: el.offsetWidth || 0,
+                top: bounds.top || 0,
+                left: bounds.left || 0
             },
             style: {},
             rules: []
