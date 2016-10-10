@@ -6,10 +6,11 @@ import re
 import traceback
 import urllib.request
 import urllib.error
-from libs.extraction_model import ExtractionModel
+from libs.extraction_model import PredictionModel
+from libs.extraction_model import Page
 
 app = Flask(__name__)
-extractionModel = ExtractionModel()
+predictionModel = PredictionModel()
 
 
 @app.route('/')
@@ -20,14 +21,16 @@ def hello_world():
 @app.route('/extract/', methods=['POST'])
 def extract():
     app.logger.info('extraction request received')
-    page = request.get_json()
-
-    predictframe = extractionModel.get_predictframe(page)
+    pageJSON = request.get_json()
+    page = Page(pageJSON, predictionModel)
 
     result = {
-        "title": extractionModel.get_title(predictframe),
-        "authors": extractionModel.get_authors(predictframe),
-        "date": extractionModel.get_date(predictframe)
+        "clean": {
+                "title": page.get_title(),
+                "authors": page.get_authors(),
+                "date": page.get_date()
+        },
+        "all": page.get_all()
     }
     return jsonify(**result)
 

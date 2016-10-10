@@ -8,6 +8,8 @@ const styleAttributes = ['background-color', 'background-image', 'height', 'widt
             'margin-top', 'margin-bottom', 'margin-left', 'margin-right',
             'font-family', 'font-size', 'font-weight', 'font-style', 'text-align'];
 
+log = console.log
+
 class LoadingSpinner {
     constructor() {
         // some singleton action
@@ -22,7 +24,7 @@ class LoadingSpinner {
     }
 
     start() {
-        console.log(this.loop)
+        log(this.loop)
         if (this.loop === null){
             this.cnt = 0;
             var that = this;
@@ -131,14 +133,33 @@ function load_iframe() {
                                                 encodeURIComponent(document.getElementById('target_url').value);
 }
 
+function refme_result(url) {
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+        if (this.readyState == 4) {
+            if (this.status == 200) {
+                var result = JSON.parse(this.responseText)
+                log(result);
+                document.getElementById('refmeresult').innerHTML = "<pre>" + JSON.stringify(result, null, 2) + "</pre>"
+            } else {
+                document.getElementById('refmeresult').innerText = "Some error occurred :-("
+            }
+        }
+    };
+    xhr.open('GET', 'http://scraper-service-staging.herokuapp.com/result?url='+encodeURIComponent(url), true);
+    xhr.send()
+}
+
+
 function scrape() {
     var loadingSpinner = new LoadingSpinner();
     loadingSpinner.start();
 
+    refme_result(document.getElementById('target_url').value)
     var elements = fetch_elements(document.getElementById('target_url').value,
                                   document.getElementById('scrapesite').contentWindow,
                                   document.getElementById('scrapesite').contentWindow.document);
-    console.log(elements);
+    log(elements);
 
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
@@ -146,7 +167,8 @@ function scrape() {
             loadingSpinner.stop();
             if (this.status == 200) {
                 var result = JSON.parse(this.responseText)
-                console.log(result);
+                log(result);
+                document.getElementById('result').innerHTML = "<pre>" + JSON.stringify(result['clean'], null, 2) + "</pre>"
             } else {
                 document.getElementById('result').innerText = "Some error occurred :-("
             }

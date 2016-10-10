@@ -564,13 +564,29 @@ def add_relative_features(row, agg, frm, ofrm, nn):
     return row
 
 
+def make_mask(feature_frame):
+    full_mask = [True] * len(feature_frame)
+    full_mask &= (feature_frame['v_pos'] != 0) | (feature_frame['h_pos'] != 0)
+    full_mask &= (feature_frame['v_pos'] >= 0) & (feature_frame['h_pos'] >= 0)
+    full_mask &= (feature_frame['h_pos_rel'] < 1)
+    full_mask &= (feature_frame['v_pos_rel'] < 6)
+    full_mask &= (feature_frame['width'] > 0)
+    full_mask &= (feature_frame['height'] > 0)
+    full_mask &= (feature_frame['height'] < 200)
+    full_mask &= (feature_frame['width'] < 1700)
+    full_mask &= (feature_frame['text_length'] >= 3)
+    return full_mask
+    
+    
 def feature_function(raw_frame):
     # get basic features
     frame = pd.DataFrame([get_features(row) for row in raw_frame.to_dict(orient='records')],
                          index=raw_frame.index.tolist())
 
+    mask = make_mask(frame)
+
     # build nearest neighbour map of elements
-    nn = NearestNeighbors().fit(frame[['center_x_raw', 'center_y_raw']].as_matrix())
+    nn = NearestNeighbors().fit(frame[mask][['center_x_raw', 'center_y_raw']].as_matrix())
 
     # enrich features
-    return frame.apply(add_relative_features, axis=1, agg=frame.describe(), frm=frame, ofrm=raw_frame, nn=nn)
+    return mask, frame[mask].apply(add_relative_features, axis=1, agg=frame.describe(), frm=frame, ofrm=raw_frame, nn=nn)
