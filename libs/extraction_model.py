@@ -4,6 +4,7 @@ import pandas as pd
 import re
 from .feature_extractor import feature_function
 from .selected_features import feature_weights_b as feature_weights
+from .parsers import parse_date
 
 from keras.models import load_model
 
@@ -258,6 +259,7 @@ class Page:
             date = self.predictframe_merged[self.predictframe_merged['final'] == 2].iloc[0]
             return {
                 "text": date['text'],
+                "parsed": parse_date(date['text']),
                 "confidence": date['date'],
                 "selector": SELECTOR_FINAL
             }
