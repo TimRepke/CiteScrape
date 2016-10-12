@@ -41,7 +41,7 @@ class LoadingSpinner {
     }
 }
 
-function fetch_elements(url, iFrameWindow, iFrameDoc){
+function fetchElements(url, iFrameWindow, iFrameDoc){
     var output = {
         url: url,
         retrieved_at: new Date,
@@ -128,35 +128,73 @@ function fetch_elements(url, iFrameWindow, iFrameDoc){
     }
 }
 
-function load_iframe() {
+function loadIFrame() {
     document.getElementById('scrapesite').src = defaultBaseUrl + defaultMirrorRoute +
                                                 encodeURIComponent(document.getElementById('target_url').value);
 }
 
-function refme_result(url) {
+function refmeResult(url) {
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
         if (this.readyState == 4) {
             if (this.status == 200) {
-                var result = JSON.parse(this.responseText)
+                var result = JSON.parse(this.responseText);
                 log(result);
-                document.getElementById('refmeresult').innerHTML = "<pre>" + JSON.stringify(result, null, 2) + "</pre>"
+                document.getElementById('refme_result').innerHTML = "<pre>" + JSON.stringify(result, null, 2) + "</pre>";
             } else {
-                document.getElementById('refmeresult').innerText = "Some error occurred :-("
+                document.getElementById('refme_result').innerText = "Some error occurred :-(";
             }
         }
     };
     xhr.open('GET', 'http://scraper-service-staging.herokuapp.com/result?url='+encodeURIComponent(url), true);
-    xhr.send()
+    xhr.send();
 }
 
+function shortenStr(istr, len) {
+    if (istr.length <= len) {
+        return istr;
+    } else {
+        return istr.substr(0, len) + '&hellip;';
+    }
+}
+
+function shortenNumber(num) {
+    try {
+        return num.toFixed(3);
+    } catch(e) {
+        return NaN;
+    }
+}
+
+function getFullTable(scores) {
+    // conf [t,a,d,u], l [fin,gilab, ilab, plab], text
+    var ret = '<table border="1"> <tr><th>Text</th><th>fin</th><th>gilab</th><th>ilab</th><th>plab</th><th>title</th><th>author</th><th>date</th><th>none</th></tr>';
+    for (var score of scores) {
+        ret += '<tr><td>'+shortenStr(score['text'], 40)+'</td><td>'+score['label']['final']+'</td><td>'+score['label']['gilabel']+
+               '</td><td>'+score['label']['ilabel']+'</td><td>'+score['label']['plabel']+'</td><td>'+shortenNumber(score['confidence']['title'])+
+               '</td><td>'+shortenNumber(score['confidence']['author'])+'</td><td>'+shortenNumber(score['confidence']['date'])+
+               '</td><td>'+shortenNumber(score['confidence']['unassigned'])+'</td></tr>'
+    }
+    ret += '</table>';
+    return ret;
+}
+
+var resultStore = null;
+
+function showFullTable(classifier) {
+    if (!resultStore || !resultStore['all'][classifier]) {
+        document.getElementById('result_table').innerHTML = 'Sorry, no data available';
+    } else {
+        document.getElementById('result_table').innerHTML = getFullTable(resultStore['all'][classifier])
+    }
+}
 
 function scrape() {
     var loadingSpinner = new LoadingSpinner();
     loadingSpinner.start();
 
-    refme_result(document.getElementById('target_url').value)
-    var elements = fetch_elements(document.getElementById('target_url').value,
+    refmeResult(document.getElementById('target_url').value)
+    var elements = fetchElements(document.getElementById('target_url').value,
                                   document.getElementById('scrapesite').contentWindow,
                                   document.getElementById('scrapesite').contentWindow.document);
     log(elements);
@@ -166,15 +204,21 @@ function scrape() {
         if (this.readyState == 4) {
             loadingSpinner.stop();
             if (this.status == 200) {
-                var result = JSON.parse(this.responseText)
+                var result = JSON.parse(this.responseText);
+                resultStore = result;
                 log(result);
-                document.getElementById('result').innerHTML = "<pre>" + JSON.stringify(result['clean'], null, 2) + "</pre>"
+                document.getElementById('result').innerHTML =
+                    '<pre>' + JSON.stringify(result['clean'], null, 2) + '</pre>'+
+                    '<button onclick="showFullTable(\'merged\')">Merged</button>'+
+                    '<button onclick="showFullTable(\'neural_net\')">Neural Net</button>'+
+                    '<button onclick="showFullTable(\'random_forest\')">Random Forest</button>';
+                showFullTable('merged')
             } else {
-                document.getElementById('result').innerText = "Some error occurred :-("
+                document.getElementById('result').innerText = 'Some error occurred :-(';
             }
         }
     };
     xhr.open('POST', defaultBaseUrl + defaultScrapeRoute, true);
     xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
-    xhr.send(JSON.stringify(elements))
+    xhr.send(JSON.stringify(elements));
 }
