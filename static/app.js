@@ -11,16 +11,20 @@ const styleAttributes = ['background-color', 'background-image', 'height', 'widt
 log = console.log
 
 class LoadingSpinner {
-    constructor() {
+    constructor(target) {
         // some singleton action
-        if(LoadingSpinner.inst){
-            return LoadingSpinner.inst;
+        if(LoadingSpinner.targetNames && LoadingSpinner.targetNames.indexOf(target) >= 0){
+            return LoadingSpinner.instances[LoadingSpinner.targetNames.indexOf(target)];
+        } else {
+            LoadingSpinner.targetNames = (LoadingSpinner.targetNames || [])
+            LoadingSpinner.targetNames.push(target);
+            LoadingSpinner.instances = (LoadingSpinner.instances || [])
+            LoadingSpinner.instances.push(this);
         }
         this.instance = this;
         this.cnt = 0;
         this.loop = null;
-        this.target = document.getElementById('result');
-        LoadingSpinner.inst = this;
+        this.target = document.getElementById(target);
     }
 
     start() {
@@ -134,13 +138,17 @@ function loadIFrame() {
 }
 
 function refmeResult(url) {
+    var loadingSpinner = new LoadingSpinner('refme_result');
+    loadingSpinner.start();
+
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
         if (this.readyState == 4) {
+            loadingSpinner.stop();
             if (this.status == 200) {
                 var result = JSON.parse(this.responseText);
                 log(result);
-                document.getElementById('refme_result').innerHTML = "<pre>" + JSON.stringify(result, null, 2) + "</pre>";
+                document.getElementById('refme_result').innerHTML = "<h3>RefME</h3><pre>" + JSON.stringify(result, null, 2) + "</pre>";
             } else {
                 document.getElementById('refme_result').innerText = "Some error occurred :-(";
             }
@@ -166,14 +174,30 @@ function shortenNumber(num) {
     }
 }
 
+// rgb(191, 226, 182)
+var TARGET_GREEN = [191, 226, 182];
+// rgb(228, 129, 129)
+var TARGET_RED = [228, 129, 129];
+
+function getConfidenceColour(confidence) {
+    confidence = confidence*1.7;
+    return 'rgb('+(TARGET_RED[0]+((TARGET_GREEN[0]-TARGET_RED[0])*confidence)).toFixed(0)+','+
+                  (TARGET_RED[1]+((TARGET_GREEN[1]-TARGET_RED[1])*confidence)).toFixed(0)+','+
+                  (TARGET_RED[2]+((TARGET_GREEN[2]-TARGET_RED[2])*confidence)).toFixed(0)+')';
+}
+
+function getCell(score) {
+    return '<td style="background-color:'+getConfidenceColour(score)+';">'+shortenNumber(score)+'</td>'
+}
+
 function getFullTable(scores) {
     // conf [t,a,d,u], l [fin,gilab, ilab, plab], text
     var ret = '<table border="1"> <tr><th>Text</th><th>fin</th><th>gilab</th><th>ilab</th><th>plab</th><th>title</th><th>author</th><th>date</th><th>none</th></tr>';
     for (var score of scores) {
         ret += '<tr><td>'+shortenStr(score['text'], 40)+'</td><td>'+score['label']['final']+'</td><td>'+score['label']['gilabel']+
-               '</td><td>'+score['label']['ilabel']+'</td><td>'+score['label']['plabel']+'</td><td>'+shortenNumber(score['confidence']['title'])+
-               '</td><td>'+shortenNumber(score['confidence']['author'])+'</td><td>'+shortenNumber(score['confidence']['date'])+
-               '</td><td>'+shortenNumber(score['confidence']['unassigned'])+'</td></tr>'
+               '</td><td>'+score['label']['ilabel']+'</td><td>'+score['label']['plabel']+'</td>'+
+               getCell(score['confidence']['title'])+getCell(score['confidence']['author'])+
+               getCell(score['confidence']['date'])+getCell(score['confidence']['unassigned'])+'</tr>'
     }
     ret += '</table>';
     return ret;
@@ -190,35 +214,50 @@ function showFullTable(classifier) {
 }
 
 function scrape() {
-    var loadingSpinner = new LoadingSpinner();
+    // start loading "animation"
+    var loadingSpinner = new LoadingSpinner('result');
     loadingSpinner.start();
 
-    refmeResult(document.getElementById('target_url').value)
+    // remove table (if existing)
+    document.getElementById('result_table').innerHTML = ''
+
+    // fetch all elements from the page in the iframe
     var elements = fetchElements(document.getElementById('target_url').value,
                                   document.getElementById('scrapesite').contentWindow,
                                   document.getElementById('scrapesite').contentWindow.document);
     log(elements);
+
 
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
         if (this.readyState == 4) {
             loadingSpinner.stop();
             if (this.status == 200) {
+                // parse the result
                 var result = JSON.parse(this.responseText);
                 resultStore = result;
                 log(result);
+
+                // dump result into the left column
                 document.getElementById('result').innerHTML =
                     '<pre>' + JSON.stringify(result['clean'], null, 2) + '</pre>'+
                     '<button onclick="showFullTable(\'merged\')">Merged</button>'+
                     '<button onclick="showFullTable(\'neural_net\')">Neural Net</button>'+
                     '<button onclick="showFullTable(\'random_forest\')">Random Forest</button>';
+
+                // show the detailed table for all candidates
                 showFullTable('merged')
             } else {
                 document.getElementById('result').innerText = 'Some error occurred :-(';
             }
         }
     };
+
+    // send list of elements as JSON to the server
     xhr.open('POST', defaultBaseUrl + defaultScrapeRoute, true);
     xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
     xhr.send(JSON.stringify(elements));
+
+    // start RefME scraper
+    refmeResult(document.getElementById('target_url').value)
 }
