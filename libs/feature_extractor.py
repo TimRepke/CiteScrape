@@ -413,7 +413,6 @@ def get_features(row):
     features['width_rel>40'] = convert_value(features['width_rel'] >= 0.4)
 
     # extract font-family features
-    # todo add merge of both
     families, fam_groups = parse_font_family(row['font_family'])
     if len(fam_groups['family']) > 0:
         features['font_family=' + fam_groups['family'][0]] = convert_value(1)
