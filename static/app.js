@@ -154,7 +154,7 @@ function refmeResult(url) {
             }
         }
     };
-    xhr.open('GET', 'http://scraper-service-staging.herokuapp.com/result?url='+encodeURIComponent(url), true);
+    xhr.open('GET', 'https://refmenode-production.herokuapp.com/search?type=website&query='+encodeURIComponent(url), true);
     xhr.send();
 }
 
@@ -240,7 +240,7 @@ function scrape() {
 
                 // dump result into the left column
                 document.getElementById('result').innerHTML =
-                    '<pre>' + JSON.stringify(result['clean'], null, 2) + '</pre>'+
+                    '<h3>CiteScrape</h3><pre>' + JSON.stringify(result['clean'], null, 2) + '</pre>'+
                     '<button onclick="showFullTable(\'merged\')">Merged</button>'+
                     '<button onclick="showFullTable(\'neural_net\')">Neural Net</button>'+
                     '<button onclick="showFullTable(\'random_forest\')">Random Forest</button>';
