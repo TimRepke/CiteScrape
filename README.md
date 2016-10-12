@@ -27,14 +27,10 @@ For help check http://docs.python-guide.org/en/latest/dev/virtualenvs/
 ```
 pip install --upgrade requirements.txt
 ```
-5. install TensorFlow
+5. run the server
 ```
-pip install --upgrade https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.11.0rc0-cp35-cp35m-linux_x86_64.whl
+KERAS_BACKEND=theano FLASK_DEBUG=1 FLASK_APP=main.py flask run
 ```
-Check the following link to find the version that fits you:
-https://www.tensorflow.org/versions/r0.11/get_started/os_setup.html#pip-installation
-6. run the server
-```
-KERAS_BACKEND=tensorflow FLASK_DEBUG=1 FLASK_APP=main.py flask run
-```
-7. Open this URL in your browser: http://localhost:5000/
+Note: The neural network was trained with the TensorFlow backend using Keras, which should be fully compatible (in this
+setup) with Theano.
+6. Open this URL in your browser: http://localhost:5000/
