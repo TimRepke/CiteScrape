@@ -25,7 +25,7 @@ source csenv/bin/activate
 For help check http://docs.python-guide.org/en/latest/dev/virtualenvs/
 4. install requirements
 ```
-pip install --upgrade requirements.txt
+pip install -U -r requirements.txt
 ```
 5. run the server
 ```
