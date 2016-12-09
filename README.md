@@ -18,21 +18,23 @@ Testing results on about 200 more pages show following performance (10-fold cros
 1. Clone the repository
 2. `cd` into the project root directory
 3. create and load virtual env (optional)
-```
-virtualenv -p /usr/bin/python3.5 csenv
-source csenv/bin/activate
-```
-For help check http://docs.python-guide.org/en/latest/dev/virtualenvs/
+ ```
+ virtualenv -p /usr/bin/python3.5 csenv
+ source csenv/bin/activate
+ ```
+ For help check http://docs.python-guide.org/en/latest/dev/virtualenvs/
+
 4. install requirements
-```
-pip install -U -r requirements.txt
-```
+ ```
+ pip install -U -r requirements.txt
+ ```
 5. run the server
-```
-KERAS_BACKEND=theano FLASK_DEBUG=1 FLASK_APP=main.py flask run
-```
-Note: The neural network was trained with the TensorFlow backend using Keras, which should be fully compatible (in this
-setup) with Theano.
+ ```
+ KERAS_BACKEND=theano FLASK_DEBUG=1 FLASK_APP=main.py flask run
+ ```
+ Note: The neural network was trained with the TensorFlow backend using Keras, which should be fully compatible (in this
+ setup) with Theano.
+
 6. Open this URL in your browser: http://localhost:5000/
 
 ## Training your own model
