@@ -8,11 +8,11 @@ These meta-data are needed to cite that online resource and can be used by a cit
 formatted bibliographic entry. This repository contains trained models, which are trained on roughly 600 webpages.
 Testing results on about 200 more pages show following performance (10-fold cross-evaluated):
 
-||Precision|Recall|F-Score|Support|
-|---|---|---|---|---|
-|Title  | 0.93 | 0.82 | 0.87 | 189|
-|Author | 0.61 | 0.50 | 0.55 | 118|
-|Date   | 0.90 | 0.66 | 0.76 | 97|
+|           | Precision | Recall | F-Score | Support |
+|-----------|-----------|--------|---------|---------|
+| Title     |     0.93  | 0.82   |  0.87   |  189    |
+| Author    |     0.61  | 0.50   |  0.55   |  118    |
+| Date      |     0.90  | 0.66   |  0.76   |  97     |
 
 ## Setup
 1. Clone the repository
